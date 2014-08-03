@@ -106,17 +106,17 @@ node example
 
 ## require
 
-## `var wsapi = require('wsapi')`
+### `var wsapi = require('wsapi')`
 in a browser this returns the client constructor - in other places, the server constructor.
 
 ## server constructor
-## `wsapi(opts)`
+### `wsapi(opts)`
 where `opts` _must_ contain:
 * anything needed by [ws](https://github.com/einaros/ws/blob/master/lib/WebSocketServer.js#L20) (generally an http `server` object or a `port`)
 * an `api` object to be passed to dnode - can also be a function accepting a "muxer" hash (for making named streams available to clients) as its only argument and returning an object for dnode
 
 ## client constructor
-## `var api = wsapi([opts])`
+### `var api = wsapi([opts])`
 where `opts` can contain:
 * `protocol` string; "ws" or "wss", defaults to "ws"
 * `host` string; defaults to "localhost"
