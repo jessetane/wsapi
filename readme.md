@@ -125,6 +125,10 @@ where `opts` can contain:
 * `reconnectInterval` milliseconds; defaults to 2500
 * `heartbeatInterval` milliseconds; defaults to 50000 (50 seconds)
 
+## client instance properties
+### `api.remote`
+a hash; your api methods will be available on this object after connecting.
+
 ## client events
 * `connect`
 * `disconnect`
