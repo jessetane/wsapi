@@ -1,0 +1,16 @@
+{
+  "name": "wsapi",
+  "description": "ws + websocket-stream + dnode + mux-demux",
+  "version": "1.0.0",
+  "dependencies": {
+    "dnode": "*",
+    "inherits": "^2.0.1",
+    "mux-demux": "*",
+    "websocket-stream": "*",
+    "ws": "^0.4.31"
+  },
+  "devDependencies": {
+    "browserify": "^5.9.1",
+    "through2": "^0.5.1"
+  }
+}
