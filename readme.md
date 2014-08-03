@@ -4,7 +4,7 @@
 note: v1.0.0 is a first pass, has no tests and as of this writing has only been used to create the example app. use at your own risk.
 
 ## why
-doing RPC over http is not so much fun. this library lets you effortlessly serve up remote APIs that feel local. you get auto-reconnect, heartbeat keepalive and multiplexed streaming for free. it Just Works!
+doing RPC over http is not so much fun. this library lets you effortlessly serve up remote APIs (over websockets) that feel local. you get auto-reconnect, heartbeat keepalive and multiplexed streaming for free. it Just Works!
 
 ## how
 
@@ -113,7 +113,7 @@ in a browser this returns the client constructor - in other places, the server c
 ## `wsapi(opts)`
 where `opts` _must_ contain:
 * anything needed by [ws](https://github.com/einaros/ws/blob/master/lib/WebSocketServer.js#L20) (generally an http `server` object or a `port`)
-* an `api` object to be passed to dnode - can also be a function accepting a "muxer" hash (for making named streams available to clients) as its only argument and returning the object for dnode
+* an `api` object to be passed to dnode - can also be a function accepting a "muxer" hash (for making named streams available to clients) as its only argument and returning an object for dnode
 
 ## client constructor
 ## `var api = wsapi([opts])`
