@@ -129,6 +129,9 @@ where `opts` can contain:
 ### `api.remote`
 a hash; your api methods will be available on this object after connecting.
 
+### `api.muxer`
+a mux-demux instance - if you'd like to open a stream just do `api.muxer.createStream(id)` - of course your api will have had to create the stream first!
+
 ## client events
 * `connect`
 * `disconnect`
