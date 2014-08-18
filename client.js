@@ -157,7 +157,7 @@ function wrap(src, dest) {
       }
     }
     else {
-      wrap.call(this, method, dest);
+      wrap.call(self, method, dest[key] = {});
     }
   })(src[key]);
   return dest;
