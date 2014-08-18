@@ -52,7 +52,7 @@ Client.prototype.disconnect = function() {
 };
 
 function connect() {
-  if (!window.navigator.onLine || this.connecting || this.connected) return;
+  if (this.connecting || this.connected) return;
   if (debug) console.warn('connecting');
   this.connecting = true;
 
