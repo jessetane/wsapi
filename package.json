@@ -1,7 +1,14 @@
 {
   "name": "wsapi",
-  "description": "ws + websocket-stream + dnode + mux-demux",
   "version": "1.0.0",
+  "description": "ws + websocket-stream + dnode + mux-demux",
+  "keywords": [
+    "websockets",
+    "multiplex",
+    "api",
+    "rpc",
+    "stream"
+  ],
   "dependencies": {
     "dnode": "^1.2.0",
     "inherits": "^2.0.1",
@@ -12,5 +19,11 @@
   "devDependencies": {
     "browserify": "^5.9.1",
     "through2": "^0.5.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/jessetane/wsapi.git"
+  },
+  "author": "Jesse Tane <jesse.tane@gmail.com>",
+  "license": "WTFPL"
 }
