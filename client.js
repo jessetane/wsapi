@@ -11,9 +11,10 @@ var debug = false;
 module.exports = function(opts) {
 
   // defaults
+  opts = opts || {};
   opts.protocol = opts.protocol || 'ws';
-  opts.host = opts.host || 'localhost';
-  opts.port = opts.port || 80;
+  opts.host = opts.host || window.location.hostname;
+  opts.port = opts.port || window.location.port;
 
   if (clients[opts.protocol] && 
       clients[opts.protocol][opts.host] && 
