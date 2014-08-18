@@ -77,10 +77,10 @@ function onremote(remote) {
   this.activity = 0;
   this.emit('connect');
 
-  if (this.heartbeatIntervalId) return;
+  if (this.reconnectIntervalId) return;
 
   var self = this;
-  this.heartbeatIntervalId = setInterval(function() {
+  this.reconnectIntervalId = setInterval(function() {
     var timeSinceLastActivity = +new Date - self.activity;
     if (!self.connected) {
       if (!self.connecting) {
