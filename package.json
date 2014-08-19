@@ -1,6 +1,8 @@
 {
   "name": "wsapi",
   "version": "1.0.0",
+  "main": "server.js",
+  "browser": "client.js",
   "description": "ws + websocket-stream + dnode + mux-demux",
   "keywords": [
     "websockets",
