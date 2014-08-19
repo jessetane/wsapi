@@ -27,7 +27,7 @@ module.exports = function(opts) {
 
       // api
       if (id === '__dnode__') {
-        stream.pipe(dnode(api, { weak: false })).pipe(stream);
+        stream.pipe(dnode(api)).pipe(stream);
       }
       
       // arbitrary streams
