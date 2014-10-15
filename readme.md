@@ -152,7 +152,7 @@ Generally emitted when connection attempts fail and when a method call times out
 
 ## Releases
 The latest stable release is published to [npm](http://npmjs.org/wsapi). Abbreviated changelog below:
-* [2.x](https://github.com/jessetane/queue/archive/2.0.0.tar.gz)
+* [2.x](https://github.com/jessetane/wsapi/archive/2.0.0.tar.gz)
  * Major rewrite to support binary streaming by switching from [mux-demux](https://github.com/dominictarr/mux-demux) to [multiplex](https://github.com/maxogden/multiplex)
 * [1.x](https://github.com/jessetane/wsapi/archive/1.0.0.tar.gz)
  * First pass
