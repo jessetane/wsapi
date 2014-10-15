@@ -148,7 +148,7 @@ Emitted when the connection to a server is lost.
 #### `api.emit('stream', stream)`
 Emitted when a new stream has been opened by the server.
 #### `api.emit('error', err)`
-Emitted when connection attempts fail and when a method call times out
+Generally emitted when connection attempts fail and when a method call times out.
 
 ## Releases
 The latest stable release is published to [npm](http://npmjs.org/wsapi). Abbreviated changelog below:
