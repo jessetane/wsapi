@@ -10,7 +10,7 @@ server.js
 var fs = require('fs');
 var http = require('http');
 var ecstatic = require('ecstatic');
-var wsapi = require('../');
+var wsapi = require('wsapi');
 
 var port = '8080';
 var statics = ecstatic(__dirname + '/share', { cache: 'no-cache' });
