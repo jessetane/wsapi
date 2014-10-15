@@ -63,7 +63,7 @@ module.exports = function(muxer) {
 
 client.js
 ``` javascript
-var wsapi = require('../');
+var wsapi = require('wsapi');
 var api = wsapi();
 
 api.on('connect', function() {
