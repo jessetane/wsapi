@@ -1,46 +1,41 @@
 # wsapi
-[ws](https://github.com/einaros/ws) + [websocket-stream](https://github.com/maxogden/websocket-stream) + [dnode](https://github.com/substack/dnode) + [mux-demux](https://github.com/dominictarr/mux-demux)
+[ws](https://github.com/einaros/ws) + [websocket-stream](https://github.com/maxogden/websocket-stream) + [multiplex](https://github.com/maxogden/multiplex) + [dnode](https://github.com/substack/dnode)
 
-note: v1.0.0 is a first pass, has no tests and as of this writing has only been used to create the example app. use at your own risk.
+## Why
+Doing RPC and file uploads / downloads over http is not so much fun. This library lets you effortlessly serve up APIs (over websockets) that feel local. You get auto-reconnect, heartbeat keepalive and multiplexed binary streaming for free. It Just Works!
 
-## why
-doing RPC over http is not so much fun. this library lets you effortlessly serve up remote APIs (over websockets) that feel local. you get auto-reconnect, heartbeat keepalive and multiplexed streaming for free. it Just Works!
-
-## how
-
+## How
 server.js
 ``` javascript
 var fs = require('fs');
 var http = require('http');
-var wsapi = require('wsapi');
+var ecstatic = require('ecstatic');
+var wsapi = require('../');
+
 var port = '8080';
+var statics = ecstatic(__dirname + '/share', { cache: 'no-cache' });
 
 var server = http.createServer(function(req, res) {
-  console.log(req.method + ' ' + req.url);
-
-  var file = 'index.html';
-  if (req.url === '/build.js') {
-    res.setHeader('content-type', 'application/javascript');
-    file = 'build.js';
+  if (!/\.[^\/]*$/.test(req.url)) {
+    req.url = '/';
   }
-  
-  res.statusCode = 200;
-  res.end(fs.readFileSync(__dirname + '/' + file));
+  console.log(req.url);
+  statics(req, res);
 });
 
-server.listen(port, '::', function() {
-  console.log('server listening on ' + port);
-  wsapi({
-    server: server,
-    api: require('./api'),
-  });
+wsapi({
+  server: server,
+  methods: require('./api'),
 });
+
+server.listen(port, '::', function(err) {
+  console.log('server listening on ' + port);
+});
+
 ```
 
 api.js
 ``` javascript
-var thru = require('through2').obj;
-
 module.exports = function(muxer) {
   return {
 
@@ -50,17 +45,16 @@ module.exports = function(muxer) {
     },
 
     // stream
-    listen: function(cb) {
-      var id = Math.random();
-      var stream = muxer[id] = thru();
+    startListening: function(cb) {
       var number = 0;
+      var stream = muxer.createStream();
       var interval = setInterval(function() {
         stream.write('event: ' + number++);
       }, 2000);
-      stream.on('end', function() {
+      stream.on('finish', function() {
         clearInterval(interval);
       });
-      cb(null, id);
+      cb(null, stream.meta);
     },
 
   };
@@ -69,55 +63,60 @@ module.exports = function(muxer) {
 
 client.js
 ``` javascript
-var wsapi = require('wsapi');
-
-var api = wsapi({
-  host: 'localhost',
-  port: '8080',
-});
+var wsapi = require('../');
+var api = wsapi();
 
 api.on('connect', function() {
 
   // basic function
-  api.remote.hello(function(err, res) {
+  api.methods.hello(function(err, res) {
     console.log(res);
   });
 
   // stream
-  api.remote.listen(function(err, id) {
-    var stream = api.muxer.createStream(id);
-    stream.on('data', function(data) {
-      console.log(data);
+  api.methods.startListening(function(err, id) {
+    api.on('stream', function(stream) {
+      if (stream.meta === id) {
+        stream.on('data', function(data) {
+          console.log(data.toString());
+        });
+      }
     });
   });
 
 });
 ```
 
-## install
+## Install
 `npm install wsapi`
 
-## example
+## Test
+`node test`
+
+## Example
 ``` bash
 cd wsapi
 npm install
 node example
 ```
 
-## require
+## Require
+#### `var wsapi = require('wsapi')`
+In a browser this returns the client constructor - in other places, the server constructor.
 
-### `var wsapi = require('wsapi')`
-in a browser this returns the client constructor - in other places, the server constructor.
+## Server constructor
+#### `var server = wsapi(opts)`
+Where `opts` _must_ contain:
+* Anything needed by [ws](https://github.com/einaros/ws/blob/master/lib/WebSocketServer.js#L20) (generally an http `server` object or a `port`)
+* A `methods` object to be passed to dnode, or a function (that accepts a multiplex instance as an argument) which returns a `methods` object
 
-## server constructor
-### `wsapi(opts)`
-where `opts` _must_ contain:
-* anything needed by [ws](https://github.com/einaros/ws/blob/master/lib/WebSocketServer.js#L20) (generally an http `server` object or a `port`)
-* an `api` object to be passed to dnode - can also be a function accepting a "muxer" hash (for making named streams available to clients) as its only argument and returning an object for dnode
+## Server instance methods
+#### `server.close()`
+Close the server and disconnect all clients.
 
-## client constructor
-### `var api = wsapi([opts])`
-where `opts` can contain:
+## Client constructor
+#### `var api = wsapi([opts])`
+Where `opts` can contain:
 * `protocol` string; "ws" or "wss", defaults to "ws"
 * `host` string; defaults to "localhost"
 * `port` string; defaults to 80
@@ -125,16 +124,43 @@ where `opts` can contain:
 * `reconnectInterval` milliseconds; defaults to 2500
 * `heartbeatInterval` milliseconds; defaults to 50000 (50 seconds)
 
-## client instance properties
-### `api.remote`
-a hash; your api methods will be available on this object after connecting.
+## Client instance methods
+#### `api.connect()`
+Generally you shouldn't need to call this directly since it is invoked automatically by the constructor and auto-reconnect logic.
+#### `api.disconnect()`
+Disconnect from the server if connected.
+#### `api.createStream([id])`
+Open a binary duplex stream to the server - if `id` is omitted, a random one will be generated.
 
-### `api.muxer`
-a mux-demux instance - if you'd like to open a stream just do `api.muxer.createStream(id)` - of course your api will have had to create the stream first!
+## Client instance properties
+#### `api.methods`
+An object, your api methods will be available on this object after connecting.
+#### `api.connecting`
+Boolean.
+#### `api.connected`
+Boolean.
 
-## client events
-* `connect`
-* `disconnect`
+## Client events
+#### `api.emit('connect')`
+Emitted when a client successfully connects to a server.
+#### `api.emit('disconnect')`
+Emitted when the connection to a server is lost.
+#### `api.emit('stream', stream)`
+Emitted when a new stream has been opened by the server.
+#### `api.emit('error', err)`
+Emitted when connection attempts fail and when a method call times out
 
-## license
-WTFPL
+## Releases
+The latest stable release is published to [npm](http://npmjs.org/wsapi). Abbreviated changelog below:
+* [2.x](https://github.com/jessetane/queue/archive/2.0.0.tar.gz)
+ * Major rewrite to support binary streaming by switching from [mux-demux](https://github.com/dominictarr/mux-demux) to [multiplex](https://github.com/maxogden/multiplex)
+* [1.x](https://github.com/jessetane/wsapi/archive/1.0.0.tar.gz)
+ * First pass
+
+## License
+Copyright © 2014 Jesse Tane <jesse.tane@gmail.com>
+
+This work is free. You can redistribute it and/or modify it under the
+terms of the [WTFPL](http://www.wtfpl.net/txt/copying).
+
+No Warranty. The Software is provided "as is" without warranty of any kind, either express or implied, including without limitation any implied warranties of condition, uninterrupted use, merchantability, fitness for a particular purpose, or non-infringement.

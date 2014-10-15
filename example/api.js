@@ -1,5 +1,3 @@
-var thru = require('through2').obj;
-
 module.exports = function(muxer) {
   return {
 
@@ -9,17 +7,17 @@ module.exports = function(muxer) {
     },
 
     // stream
-    listen: function(cb) {
-      var id = Math.random();
-      var stream = muxer[id] = thru();
+    startListening: function(cb) {
       var number = 0;
+      var stream = muxer.createStream();
       var interval = setInterval(function() {
         stream.write('event: ' + number++);
       }, 2000);
-      stream.on('end', function() {
+      stream.on('finish', function() {
+        console.log('listener ended', stream.meta)
         clearInterval(interval);
       });
-      cb(null, id);
+      cb(null, stream.meta);
     },
 
   };

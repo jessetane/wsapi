@@ -1,9 +1,9 @@
 {
   "name": "wsapi",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "server.js",
   "browser": "client.js",
-  "description": "ws + websocket-stream + dnode + mux-demux",
+  "description": "ws + websocket-stream + multiplex + dnode",
   "keywords": [
     "websockets",
     "multiplex",
@@ -14,12 +14,16 @@
   "dependencies": {
     "dnode": "^1.2.0",
     "inherits": "^2.0.1",
-    "mux-demux": "^3.7.9",
-    "websocket-stream": "^0.6.0",
-    "ws": "^0.4.31"
+    "multiplex": "jessetane/multiplex#cleanup-ended-streams",
+    "websocket-stream": "^1.0.2",
+    "ws": "^0.4.32"
   },
   "devDependencies": {
-    "browserify": "^5.9.1",
+    "browserify": "^6.0.3",
+    "chunky": "0.0.0",
+    "concat-stream": "^1.4.6",
+    "ecstatic": "^0.5.5",
+    "tape": "^3.0.0",
     "through2": "^0.5.1"
   },
   "repository": {

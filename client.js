@@ -1,13 +1,13 @@
 var websocket = require('websocket-stream');
 var dnode = require('dnode');
-var Muxer = require('mux-demux');
+var Muxer = require('multiplex');
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('inherits');
+var thru = require('through2').obj;
 
 var clients = {};
 var debug = false;
 
-// module is actually a singleton factory
 module.exports = function(opts) {
 
   // defaults
@@ -16,17 +16,25 @@ module.exports = function(opts) {
   opts.host = opts.host || window.location.hostname;
   opts.port = opts.port || window.location.port;
 
-  if (clients[opts.protocol] && 
-      clients[opts.protocol][opts.host] && 
-      clients[opts.protocol][opts.host][opts.port]) {
-    client = clients[opts.protocol][opts.host][opts.port];
+  // there should only ever be one client per protocol/host/port 
+  // except in special circumstances like testing
+  if (!opts.nocache) {
+    if (clients[opts.protocol] && 
+        clients[opts.protocol][opts.host] && 
+        clients[opts.protocol][opts.host][opts.port]) {
+      client = clients[opts.protocol][opts.host][opts.port];
+    }
+    else {
+      clients[opts.protocol] = clients[opts.protocol] || {};
+      clients[opts.protocol][opts.host] = clients[opts.protocol][opts.host] || {};
+      client = new Client(opts);
+    }
+    clients[opts.protocol][opts.host][opts.port] = client;
   }
   else {
-    clients[opts.protocol] = clients[opts.protocol] || {};
-    clients[opts.protocol][opts.host] = clients[opts.protocol][opts.host] || {};
     client = new Client(opts);
   }
-  clients[opts.protocol][opts.host][opts.port] = client;
+
   return client;
 };
 
@@ -42,117 +50,130 @@ function Client(opts) {
   this.heartbeatInterval = opts.heartbeatInterval || 50000;
   this.connected = false;
 
+  this.ondisconnect = ondisconnect.bind(this);
+  this.onerror = onerror.bind(this);
+  this.name = Math.random()
+
   // do this in nextTick so callers have a chance to add event listeners
-  setTimeout(connect.bind(this));
+  setTimeout(this.connect.bind(this));
 }
 inherits(Client, EventEmitter);
 
-Client.prototype.disconnect = function() {
-  // TODO I guess.. but really, do we need this?
-};
-
-function connect() {
+Client.prototype.connect = function() {
   if (this.connecting || this.connected) return;
   if (debug) console.warn('connecting');
   this.connecting = true;
 
   this.ws = websocket(this.protocol + '://' + this.host + ':' + this.port);
-  this.dnode = dnode();
-  this.muxer = new Muxer;
-  this.rpc = this.muxer.createStream('__dnode__');
+  this.ws.on('close', this.ondisconnect);
+  this.ws.on('error', this.onerror);
 
-  this.ws.on('error', onerror.bind(this));
-  this.dnode.on('remote', onremote.bind(this));
-
+  var self = this;
+  this.muxer = new Muxer(function(stream) {
+    self.emit('stream', stream);
+  });
   this.ws.pipe(this.muxer).pipe(this.ws);
-  this.rpc.pipe(this.dnode).pipe(this.rpc);
-}
 
-function onremote(remote) {
+  var rpcstream = this.muxer.createStream('__dnode__');
+  var rpcclient = dnode();
+  rpcclient.on('remote', onconnect.bind(this));
+  rpcstream.pipe(thru(function(c, enc, cb) {
+    cb(null, c.toString());
+  })).pipe(rpcclient).pipe(rpcstream);
+};
+
+Client.prototype.disconnect = function() {
+  if (this.reconnectIntervalId) clearInterval(this.reconnectIntervalId);
+  if (this.connected) ondisconnect.call(this);
+};
+
+Client.prototype.createStream = function(id) {
+  if (!this.connected) throw new Error('not connected');
+  if (!id) id = (Math.random() * 100000000).toFixed();
+  return this.muxer.createStream(id);
+};
+
+function onconnect(remote) {
   if (debug) console.warn('connected');
 
-  this.remote = wrap.call(this, remote, {});
+  this.methods = wrap.call(this, remote, {});
   this.connecting = false;
   this.connected = true;
-  this.activity = 0;
+  this.lastActivity = +new Date;
   this.emit('connect');
 
   if (this.reconnectIntervalId) return;
 
   var self = this;
   this.reconnectIntervalId = setInterval(function() {
-    var timeSinceLastActivity = +new Date - self.activity;
+    var timeSinceLastActivity = +new Date - self.lastActivity;
     if (!self.connected) {
       if (!self.connecting) {
-        connect.call(self);
+        self.connect();
       }
     }
     else if (timeSinceLastActivity > self.heartbeatInterval) {
       if (debug) console.warn('ping');
-      self.activity = +new Date;
-      self.remote.ping(self.activity, function(err, message) {
-        self.latency = +new Date - message;
+      self.lastActivity = +new Date;
+      self.methods.ping(function(err) {
+        if (err) return self.ondisconnect();
+        self.latency = +new Date - self.lastActivity;
       });
     }
   }, this.reconnectInterval);
 }
 
-function onerror(err) {
-  var ws = this.ws;
-
+function ondisconnect() {
   if (debug) console.warn('disconnected');
 
-  if (ws) {
-    ws.end();
-    setTimeout(function() {
-      ws.removeAllListeners();
-    });
-    delete this.ws;
-  }
-
+  this.muxer.end();
+  delete this.muxer;
+  
+  this.ws.removeListener('close', this.ondisconnect);
+  this.ws.removeListener('error', this.onerror);
+  this.ws.end();
+  delete this.ws;
+  
   this.connecting = false;
   this.connected = false;
+  this.emit('disconnect');
+}
 
-  if (!(err instanceof Error)) {
-    err = new Error('network error');
+function onerror(err) {
+  if (this.listeners('error').length) {
+    this.emit('error', err);
   }
-  err.code = 503;
-  this.emit('disconnect', err);
 }
 
 function wrap(src, dest) {
   var self = this;
   for (var key in src) (function(method) {
     if (typeof method === 'function') {
-      dest[key] = function() {
+      dest[key] = methodWrapper;
+      function methodWrapper() {
         var args = [].slice.call(arguments);
         var cb = args.slice(-1)[0];
-        if (cb) {
-
-          // not connected
-          if (!self.connected) {
-            return cb(new Error('not connected'));
-          }
+        if (cb && typeof cb === 'function') {
 
           // timeout
           var timeoutId = setTimeout(function() {
             var err = new Error('operation timed out');
-            err.code = 503;
+            err.code = 408;
             timeoutId = null;
             cb(err);
-            onerror.call(self);
+            onerror.call(self, err);
           }, self.timeout);
 
           // replace cb with a wrapper that cancels the timeout
           args.splice(-1, 1, function() {
             if (timeoutId !== null) {
               clearTimeout(timeoutId);
-              self.activity = +new Date;
+              self.lastActivity = +new Date;
               cb.apply(null, arguments);
             }
           });
         }
-        self.activity = +new Date;
+        self.lastActivity = +new Date;
         method.apply(null, args);
       }
     }

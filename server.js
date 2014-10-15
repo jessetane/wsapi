@@ -1,80 +1,50 @@
 var dnode = require('dnode');
 var WebSocketServer = require('ws').Server;
 var websocket = require('websocket-stream');
-var Demuxer = require('mux-demux');
+var Muxer = require('multiplex');
 
 var debug = false;
 
 module.exports = function(opts) {
-  var apiPrototype = opts.api;
-  delete opts.api;
+  var methodsproto = opts.methods;
+  delete opts.methods;
   var wss = new WebSocketServer(opts);
   wss.on('connection', function(ws) {
-    var muxer = {};
-    var api = typeof apiPrototype === 'function' ? apiPrototype(muxer) : apiPrototype;
-
-    // the client requires that the api include a ping method
-    api.ping = function(message, cb) {
-      if (typeof cb === 'function') {
-        cb(null, message);
-      }
-    };
-
-    var demuxer = new Demuxer(function(stream) {
-      var id = stream.meta;
+    var muxer = new Muxer(function(stream, id) {
 
       if (debug) console.warn('stream requested: ' + id);
 
-      // api
+      // rpc server stream
       if (id === '__dnode__') {
-        stream.pipe(dnode(api)).pipe(stream);
+        stream.pipe(dnode(methods)).pipe(stream);
       }
       
       // arbitrary streams
-      else if (id) {
-        var src = null;
-
-        // an api method has already set up this stream
-        if (muxer[id]) {
-          src = muxer[id];
-        }
-
-        // only set up if we have a src
-        if (src) {
-
-          // forward errors from the client back to the source
-          stream.on('error', function(err) {
-            src.emit('error', err);
-          });
-
-          // forward errors from the source back to the client
-          src.on('error', function(err) {
-            stream.error(err.message);
-          });
-
-          // clean up ended streams
-          src.on('end', function() {
-            delete muxer[id];
-          });
-          
-          // hook up streams
-          if (src.readable && stream.writable) src.pipe(stream);
-          if (src.writable && stream.readable) stream.pipe(src);
-        }
+      else {
+        muxer.emit('stream', stream);
       }
     });
     
-    var con = websocket(ws);
-    con.pipe(demuxer).pipe(con);
-    con.on('error', function(err) {
+    // override muxer.createStream to autogen random stream ids
+    // this is not really safe, but it's better than the default 
+    // behavior which is even more prone to collisions..
+    var cs = muxer.createStream;
+    muxer.createStream = function(id) {
+      if (!id) id = (Math.random() * 100000000).toFixed();
+      return cs(id);
+    };
 
-      if (debug) console.warn('websocket closed');
+    var methods = typeof methodsproto === 'function' ? methodsproto(muxer) : methodsproto;
 
-      for (var s in muxer) {
-        if (muxer[s].emit) {
-          muxer[s].end();
-        }
-      }
+    // the client requires a ping method for implementing heartbeat keepalive
+    methods.ping = methods.ping || function(cb) {
+      cb();
+    };
+
+    var wsstream = websocket(ws);
+    wsstream.pipe(muxer).pipe(wsstream);
+    wsstream.on('close', function() {
+      muxer.end();
     });
 
     if (debug) console.warn('websocket opened');

@@ -1,23 +1,27 @@
 var wsapi = require('../');
-
-var api = wsapi({
-  host: 'localhost',
-  port: '8080',
-});
+var api = wsapi();
 
 api.on('connect', function() {
 
   // basic function
-  api.remote.hello(function(err, res) {
+  api.methods.hello(function(err, res) {
     console.log(res);
   });
 
   // stream
-  api.remote.listen(function(err, id) {
-    var stream = api.muxer.createStream(id);
-    stream.on('data', function(data) {
-      console.log(data);
-    });
+  api.methods.startListening(function(err, id) {
+    api.on('stream', onstream);
+    function onstream(stream) {
+      if (stream.meta === id) {
+        api.removeListener('stream', onstream);
+        stream.on('data', function(data) {
+          console.log(data.toString());
+        });
+        stream.on('end', function() {
+          console.log('broadcaster ended', stream.meta);
+        });
+      }
+    }
   });
 
 });
