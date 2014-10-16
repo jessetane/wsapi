@@ -15,6 +15,7 @@
     "dnode": "^1.2.0",
     "inherits": "^2.0.1",
     "multiplex": "jessetane/multiplex#cleanup-ended-streams",
+    "through2": "^0.6.3",
     "websocket-stream": "^1.0.2",
     "ws": "^0.4.32"
   },
