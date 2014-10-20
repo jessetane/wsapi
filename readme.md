@@ -16,11 +16,11 @@ var port = '8080';
 var statics = ecstatic(__dirname + '/share', { cache: 'no-cache' });
 
 var server = http.createServer(function(req, res) {
-  if (!/\.[^\/]*$/.test(req.url)) {
-    req.url = '/';
-  }
   console.log(req.url);
-  statics(req, res);
+  statics(req, res, function() {
+    req.url = '/';
+    statics(req, res);
+  });
 });
 
 wsapi({
