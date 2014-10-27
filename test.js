@@ -38,6 +38,12 @@ function mkapi(muxer) {
       // never call cb
     },
 
+    nested: {
+      stuff: {
+        here: function(cb) { cb(); }
+      }
+    }
+
   };
 }
 
