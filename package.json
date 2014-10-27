@@ -32,7 +32,7 @@
     "tape": "^3.0.0"
   },
   "scripts": {
-    "travis": "istanbul cover test --report lcovonly && cat coverage/lcov.info | coveralls"
+    "travis": "istanbul cover test.js --report lcovonly && cat coverage/lcov.info | coveralls"
   },
   "author": "Jesse Tane <jesse.tane@gmail.com>",
   "license": "WTFPL"
