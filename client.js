@@ -89,7 +89,7 @@ Client.prototype.connect = function() {
 
 Client.prototype.disconnect = function() {
   if (this.reconnectIntervalId) clearInterval(this.reconnectIntervalId);
-  ondisconnect.call(this);
+  this.ondisconnect();
 };
 
 Client.prototype.createStream = function(id) {
