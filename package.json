@@ -29,7 +29,7 @@
     "coveralls": "^2.11.2",
     "ecstatic": "^0.5.5",
     "istanbul": "^0.3.2",
-    "tape": "^3.0.0",
+    "tape": "^3.0.0"
   },
   "scripts": {
     "travis": "istanbul cover test --report lcovonly && cat coverage/lcov.info | coveralls"
