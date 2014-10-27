@@ -54,6 +54,19 @@ var server = Server({
   methods: mkapi,
 });
 
+tape('test client caching', function(t) {
+  t.plan(2);
+  
+  var client = Client({ host: '::', port: PORT });
+  var client1 = Client({ host: '::', port: PORT });
+  var client2 = Client({ protocol: 'ws', host: '::', port: PORT });
+  
+  client.disconnect();
+
+  t.equals(client1, client);
+  t.equals(client2, client);
+});
+
 tape('simple method call', function(t) {
   t.plan(2);
   
