@@ -52,10 +52,15 @@ function Client(opts) {
 
   this.ondisconnect = ondisconnect.bind(this);
   this.onerror = onerror.bind(this);
-  this.name = Math.random()
+  this.name = Math.random();
+  this.session = Math.random();
 
   // do this in nextTick so callers have a chance to add event listeners
-  setTimeout(this.connect.bind(this));
+  var self = this;
+  var session = this.session;
+  setTimeout(function() {
+    if (self.session === session) self.connect();
+  });
 }
 inherits(Client, EventEmitter);
 
@@ -84,7 +89,7 @@ Client.prototype.connect = function() {
 
 Client.prototype.disconnect = function() {
   if (this.reconnectIntervalId) clearInterval(this.reconnectIntervalId);
-  if (this.connected) ondisconnect.call(this);
+  ondisconnect.call(this);
 };
 
 Client.prototype.createStream = function(id) {
@@ -126,17 +131,24 @@ function onconnect(remote) {
 function ondisconnect() {
   if (debug) console.warn('disconnected');
 
-  this.muxer.end();
-  delete this.muxer;
-  
-  this.ws.removeListener('close', this.ondisconnect);
-  this.ws.removeListener('error', this.onerror);
-  this.ws.end();
-  delete this.ws;
-  
+  if (this.muxer) {
+    this.muxer.end();
+    delete this.muxer;
+  }
+
+  if (this.ws) {
+    this.ws.removeListener('close', this.ondisconnect);
+    this.ws.removeListener('error', this.onerror);
+    this.ws.end();
+    delete this.ws;
+  }
+
+  this.session = Math.random();
   this.connecting = false;
-  this.connected = false;
-  this.emit('disconnect');
+  if (this.connected) {
+    this.connected = false;
+    this.emit('disconnect');
+  }
 }
 
 function onerror(err) {
