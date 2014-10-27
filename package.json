@@ -11,6 +11,10 @@
     "rpc",
     "stream"
   ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/jessetane/wsapi.git"
+  },
   "dependencies": {
     "dnode": "^1.2.0",
     "inherits": "^2.0.1",
@@ -21,15 +25,14 @@
   },
   "devDependencies": {
     "browserify": "^6.0.3",
-    "chunky": "0.0.0",
     "concat-stream": "^1.4.6",
+    "coveralls": "^2.11.2",
     "ecstatic": "^0.5.5",
+    "istanbul": "^0.3.2",
     "tape": "^3.0.0",
-    "through2": "^0.5.1"
   },
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/jessetane/wsapi.git"
+  "scripts": {
+    "travis": "istanbul cover test --report lcovonly && cat coverage/lcov.info | coveralls"
   },
   "author": "Jesse Tane <jesse.tane@gmail.com>",
   "license": "WTFPL"
