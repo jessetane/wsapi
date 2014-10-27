@@ -41,15 +41,17 @@ function mkapi(muxer) {
   };
 }
 
+var PORT = 8888;
+
 var server = Server({
-  port: 8080,
+  port: PORT,
   methods: mkapi,
 });
 
 tape('simple method call', function(t) {
   t.plan(2);
   
-  var client = Client({ host: '::', port: 8080, nocache: true });
+  var client = Client({ host: '::', port: PORT, nocache: true });
 
   client.on('connect', function() {
     client.methods.uppercase('yo', function(err, res) {
@@ -63,7 +65,7 @@ tape('simple method call', function(t) {
 tape('method call timeout', function(t) {
   t.plan(3);
 
-  var client = Client({ host: '::', port: 8080, nocache: true, timeout: 100 });
+  var client = Client({ host: '::', port: PORT, nocache: true, timeout: 100 });
 
   client.on('connect', function() {
     var start = +new Date;
@@ -84,7 +86,7 @@ tape('method call timeout', function(t) {
 tape('test download', function(t) {
   t.plan(2);
 
-  var client = Client({ host: '::', port: 8080, nocache: true });
+  var client = Client({ host: '::', port: PORT, nocache: true });
 
   client.on('connect', function() {
     client.methods.download(function(err, id) {
@@ -104,7 +106,7 @@ tape('test download', function(t) {
 tape('test upload', function(t) {
   t.plan(2);
 
-  var client = Client({ host: '::', port: 8080, nocache: true });
+  var client = Client({ host: '::', port: PORT, nocache: true });
 
   client.on('connect', function() {
     var upload = client.createStream();
@@ -130,7 +132,7 @@ tape('auto-reconnect', function(t) {
 
   var start = 0;
   var reconnecting = false;
-  var client = Client({ host: '::', port: 8080, nocache: true, reconnectInterval: 100 });
+  var client = Client({ host: '::', port: PORT, nocache: true, reconnectInterval: 100 });
 
   client.on('connect', function() {
     if (reconnecting) {
@@ -153,14 +155,14 @@ tape('auto-reconnect', function(t) {
     t.ok(1, 'client saw disconnect');
     start = +new Date;
     reconnecting = true;
-    server = Server({ port: 8080, methods: mkapi });
+    server = Server({ port: PORT, methods: mkapi });
   });
 });
 
 tape('heartbeat keepalive', function(t) {
   t.plan(1);
 
-  server = Server({ port: 8080, methods: {
+  server = Server({ port: PORT, methods: {
     activity: function(cb) {
       cb();
     },
@@ -168,14 +170,14 @@ tape('heartbeat keepalive', function(t) {
       var end = +new Date;
       var duration = end - start;
       var timeSinceLastActivity = Math.abs(duration - client.heartbeatInterval * 3);
-      t.ok(timeSinceLastActivity <= 10, 'heartbeatInterval was respected');
+      t.ok(timeSinceLastActivity <= 30, 'heartbeatInterval was respected');
       cb();
       server.close();
     }
   }});
 
   var start = 0;
-  var client = Client({ host: '::', port: 8080, nocache: true, reconnectInterval: 50, heartbeatInterval: 100 });
+  var client = Client({ host: '::', port: PORT, nocache: true, reconnectInterval: 50, heartbeatInterval: 100 });
 
   client.on('connect', function() {
     start = +new Date;
