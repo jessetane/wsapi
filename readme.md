@@ -11,12 +11,10 @@ Doing RPC and file uploads / downloads over http is not so much fun. This librar
 ## How
 server.js
 ``` javascript
-var fs = require('fs');
 var http = require('http');
 var ecstatic = require('ecstatic');
 var wsapi = require('wsapi');
 
-var port = '8080';
 var statics = ecstatic(__dirname + '/share', { cache: 'no-cache' });
 
 var server = http.createServer(function(req, res) {
@@ -32,10 +30,9 @@ wsapi({
   methods: require('./api'),
 });
 
-server.listen(port, '::', function(err) {
+server.listen('8080', '::', function(err) {
   console.log('server listening on ' + port);
 });
-
 ```
 
 api.js
@@ -157,7 +154,7 @@ Generally emitted when connection attempts fail and when a method call times out
 ## Releases
 The latest stable release is published to [npm](http://npmjs.org/wsapi). Abbreviated changelog below:
 * [2.x](https://github.com/jessetane/wsapi/archive/2.0.0.tar.gz)
- * Major rewrite to support binary streaming by switching from [mux-demux](https://github.com/dominictarr/mux-demux) to [multiplex](https://github.com/maxogden/multiplex)
+ * Rewrite to support binary streaming by switching from [mux-demux](https://github.com/dominictarr/mux-demux) to [multiplex](https://github.com/maxogden/multiplex)
 * [1.x](https://github.com/jessetane/wsapi/archive/1.0.0.tar.gz)
  * First pass
 
