@@ -155,6 +155,7 @@ function onerror(err) {
   if (this.listeners('error').length) {
     this.emit('error', err);
   }
+  this.ondisconnect();
 }
 
 function wrap(src, dest) {
