@@ -152,11 +152,13 @@ Emitted when a new stream has been opened by the server.
 Generally emitted when connection attempts fail and when a method call times out.
 
 ## Releases
-The latest stable release is published to [npm](http://npmjs.org/wsapi). Abbreviated changelog below:
-* [2.x](https://github.com/jessetane/wsapi/archive/2.0.0.tar.gz)
- * Rewrite to support binary streaming by switching from [mux-demux](https://github.com/dominictarr/mux-demux) to [multiplex](https://github.com/maxogden/multiplex)
+The latest stable release is published to [npm](http://npmjs.org/wsapi).
+* [2.1.0](https://github.com/jessetane/wsapi/archive/2.1.0.tar.gz)
+ * Disconnect client on error.
+* [2.0.0](https://github.com/jessetane/wsapi/archive/2.0.0.tar.gz)
+ * Rewrite to support binary streaming by switching from [mux-demux](https://github.com/dominictarr/mux-demux) to [multiplex](https://github.com/maxogden/multiplex).
 * [1.x](https://github.com/jessetane/wsapi/archive/1.0.0.tar.gz)
- * First pass
+ * First pass.
 
 ## License
 Copyright © 2014 Jesse Tane <jesse.tane@gmail.com>
