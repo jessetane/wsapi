@@ -80,7 +80,7 @@ Client.prototype.connect = function() {
   this.ws.pipe(this.muxer).pipe(this.ws);
 
   var rpcstream = this.muxer.createStream('__dnode__');
-  var rpcclient = dnode();
+  var rpcclient = dnode(null, { weak: false });
   rpcclient.on('remote', onconnect.bind(this));
   rpcstream.pipe(thru(function(c, enc, cb) {
     cb(null, c.toString());

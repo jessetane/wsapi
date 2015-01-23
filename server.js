@@ -16,7 +16,7 @@ module.exports = function(opts) {
 
       // rpc server stream
       if (id === '__dnode__') {
-        stream.pipe(dnode(methods)).pipe(stream);
+        stream.pipe(dnode(methods, { weak: false })).pipe(stream);
       }
       
       // arbitrary streams
