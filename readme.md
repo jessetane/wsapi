@@ -2,8 +2,8 @@
 [ws](https://github.com/einaros/ws) + [websocket-stream](https://github.com/maxogden/websocket-stream) + [multiplex](https://github.com/maxogden/multiplex) + [dnode](https://github.com/substack/dnode)
 
 [![npm](http://img.shields.io/npm/v/wsapi.svg?style=flat-square)](http://www.npmjs.org/wsapi)
-[![tests](https://img.shields.io/travis/jessetane/wsapi.svg?style=flat-square&branch=master)](https://travis-ci.org/jessetane/wsapi)
-[![coverage](https://img.shields.io/coveralls/jessetane/wsapi.svg?style=flat-square&branch=master)](https://coveralls.io/r/jessetane/wsapi)
+[![tests](https://img.shields.io/travis/jessetane/wsapi/master.svg?style=flat-square)](https://travis-ci.org/jessetane/wsapi)
+[![coverage](https://img.shields.io/coveralls/jessetane/wsapi/master.svg?style=flat-square)](https://coveralls.io/r/jessetane/wsapi)
 
 ## Why
 Doing RPC and file uploads / downloads over http is not so much fun. This library lets you effortlessly serve up APIs (over websockets) that feel local. You get auto-reconnect, heartbeat keepalive and multiplexed binary streaming for free. It Just Works!
