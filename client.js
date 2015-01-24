@@ -162,8 +162,7 @@ function wrap(src, dest) {
   var self = this;
   for (var key in src) (function(method) {
     if (typeof method === 'function') {
-      dest[key] = methodWrapper;
-      function methodWrapper() {
+      dest[key] = function methodWrapper() {
         var args = [].slice.call(arguments);
         var cb = args.slice(-1)[0];
         if (cb && typeof cb === 'function') {
